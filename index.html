@@ -718,6 +718,7 @@ li button:hover,li button.on{background:color-mix(in srgb,var(--accent) 12%,tran
 .foot{font-size:12px;color:var(--muted);padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:16px;border-top:1px solid var(--line);line-height:1.45}
 .foot a,.pop a{color:var(--accent)}
 #map{background:var(--mapbg);min-width:0}
+#map.dark-tiles .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.9) contrast(.85) saturate(.6)}
 .leaflet-container{font-family:var(--font-body);background:var(--mapbg)}
 .pin{font-family:var(--font-sign);font-weight:700;font-size:13px;color:#fff;border-radius:4px;display:grid;place-items:center;box-shadow:0 0 0 1.5px var(--panel);font-variant-numeric:tabular-nums;cursor:pointer}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--panel);color:var(--fg);box-shadow:0 6px 24px rgba(0,0,0,.25)}
@@ -773,12 +774,12 @@ const B=DATA.b.map((b,i)=>({...b,id:i,key:'b-'+(b.n+'-'+b.name).toLowerCase().re
 // share polygon for entries without geometry
 B.forEach(b=>{if(!b.geom){const o=B.find(x=>x.osm===b.osm&&x.geom);b.geom=o.geom;b.gtype=o.gtype;b.shared=o.id}});
 
-const map=L.map('map',{zoomControl:true,attributionControl:true,minZoom:12,maxZoom:20,zoomSnap:.5});
+const map=L.map('map',{zoomControl:true,attributionControl:true,minZoom:12,maxZoom:19,zoomSnap:.5});
 map.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
 const isDark=()=>{const d=document.documentElement.dataset.theme;return d?d==='dark':matchMedia('(prefers-color-scheme: dark)').matches};
-const tileAttr='© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>';
-const tiles=L.tileLayer('https://{s}.basemaps.cartocdn.com/'+(isDark()?'dark_all':'rastertiles/voyager')+'/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:20,attribution:tileAttr}).addTo(map);
-function setTiles(){tiles.setUrl('https://{s}.basemaps.cartocdn.com/'+(isDark()?'dark_all':'rastertiles/voyager')+'/{z}/{x}/{y}{r}.png')}
+const tileAttr='© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
+const tiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:tileAttr}).addTo(map);
+function setTiles(){map.getContainer().classList.toggle('dark-tiles',isDark())}
 const toLL=r=>r.map(([x,y])=>[y,x]);
 
 const shapes={};
@@ -844,7 +845,7 @@ function select(id,fromMap,quiet){
   const dir=`https://www.google.com/maps/dir/?api=1&destination=${b.lat},${b.lng}&travelmode=walking`;
   const html=`<div class="pop"><div class="t">${b.name}</div><div class="m">No. ${b.n} · Grid ${b.grid} · ${CATS[b.cat]}</div><div class="acts"><a class="primary" href="${dir}" target="_blank" rel="noopener">Walking directions</a><button type="button" id="cp">Copy link</button></div></div>`;
   const s=shapeOf(b);
-  map.flyToBounds(s.getBounds(),{maxZoom:18.5,padding:[60,60],duration:.6});
+  map.flyToBounds(s.getBounds(),{maxZoom:18,padding:[60,60],duration:.6});
   popup.setLatLng([b.lat,b.lng]).setContent(html).openOn(map);
   const cp=document.getElementById('cp');
   cp.onclick=()=>{const u=location.href.split('#')[0]+'#'+b.key;
